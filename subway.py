@@ -132,7 +132,7 @@ class GestureController:
         thickness = 2
 
         # Define inner square (center)
-        square_size = int(min(w, h) * 0.4)
+        square_size = int(min(w, h) * 0.3)
         x1 = (w - square_size) // 2
         y1 = (h - square_size) // 2
         x2 = x1 + square_size
