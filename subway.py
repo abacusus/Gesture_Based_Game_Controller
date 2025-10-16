@@ -13,10 +13,10 @@ class GestureConfig:
     """Configuration for gesture detection"""
     max_hands: int = 1
     gesture_threshold: float = 40.0
-    cooldown_time: float = 0.8
-    smoothing_factor: float = 0.7
+    cooldown_time: float = 0.3
+    smoothing_factor: float = 0.1
     confidence_threshold: float = 0.4
-    zone_dwell_time: float = 0.1 # Time to stay in zone before triggering
+    zone_dwell_time: float = 0.01 # Time to stay in zone before triggering
 
 class GestureController:
     def __init__(self, config: GestureConfig = None):
@@ -125,35 +125,35 @@ class GestureController:
         """Draw the grid zones on the image"""
         h, w = img.shape[:2]
         
-        # Draw grid lines
-        cv2.line(img, (w//3, 0), (w//3, h), (200, 200, 200), 2)
-        cv2.line(img, (2*w//3, 0), (2*w//3, h), (200, 200, 200), 2)
-        cv2.line(img, (0, h//3), (w, h//3), (200, 200, 200), 2)
-        cv2.line(img, (0, 2*h//3), (w, 2*h//3), (200, 200, 200), 2)
-        
-        #   zonesLabel
-        cv2.putText(img, "UP", (w//2 - 20, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0,255,0), 2)
-        cv2.putText(img, "DOWN", (w//2 - 40, h - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0,255,0), 2)
-        cv2.putText(img, "LEFT", (10, h//2), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0,255,0), 2)
-        cv2.putText(img, "RIGHT", (w - 80, h//2), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0,255,0), 2)
-        
-        # Highlight 
-        if self.current_zone and self.current_zone != "center":
-            zone_color = (0, 255, 255)  # Yellow 
-            alpha = 0.3  
-            
-            overlay = img.copy()
-            if self.current_zone == "swipe_up":
-                cv2.rectangle(overlay, (0, 0), (w, h//3), zone_color, -1)
-            elif self.current_zone == "swipe_down":
-                cv2.rectangle(overlay, (0, 2*h//3), (w, h), zone_color, -1)
-            elif self.current_zone == "swipe_left":
-                cv2.rectangle(overlay, (0, 0), (w//3, h), zone_color, -1)
-            elif self.current_zone == "swipe_right":
-                cv2.rectangle(overlay, (2*w//3, 0), (w, h), zone_color, -1)
-            
-            cv2.addWeighted(overlay, alpha, img, 1 - alpha, 0, img)
-        
+        # Colors and font
+        color = (100, 100, 100)
+        text_color = (0, 255, 0)
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        thickness = 2
+
+        # Define inner square (center)
+        square_size = int(min(w, h) * 0.4)
+        x1 = (w - square_size) // 2
+        y1 = (h - square_size) // 2
+        x2 = x1 + square_size
+        y2 = y1 + square_size
+
+        # Draw the square
+        cv2.rectangle(img, (x1, y1), (x2, y2), color, thickness, cv2.LINE_AA)
+
+        # Draw diagonals from image corners to square corners
+        cv2.line(img, (0, 0), (x1, y1), color, thickness, cv2.LINE_AA)           # Top-left
+        cv2.line(img, (w, 0), (x2, y1), color, thickness, cv2.LINE_AA)           # Top-right
+        cv2.line(img, (0, h), (x1, y2), color, thickness, cv2.LINE_AA)           # Bottom-left
+        cv2.line(img, (w, h), (x2, y2), color, thickness, cv2.LINE_AA)           # Bottom-right
+
+
+         # Zone labels
+        cv2.putText(img, "UP", (w//2 - 30, 50), font, 1, text_color, 2, cv2.LINE_AA)
+        cv2.putText(img, "DOWN", (w//2 - 60, h - 30), font, 1, text_color, 2, cv2.LINE_AA)
+        cv2.putText(img, "LEFT", (40, h//2 + 10), font, 1, text_color, 2, cv2.LINE_AA)
+        cv2.putText(img, "RIGHT", (w - 140, h//2 + 10), font, 1, text_color, 2, cv2.LINE_AA)
+
         return img
     
     def draw_info_overlay(self, img: np.ndarray, gesture: Optional[str] = None) -> np.ndarray:
@@ -268,7 +268,7 @@ def main():
     # Initialize controller
     config = GestureConfig(
         zone_dwell_time=0.01,  # Time to stay in zone before action
-        cooldown_time=0.4,    # Minimum time between actions
+        cooldown_time=0.3,    # Minimum time between actions
         confidence_threshold=0.4
     )
     
